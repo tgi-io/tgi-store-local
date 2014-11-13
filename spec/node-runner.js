@@ -12,7 +12,7 @@ var CORE = require('../dist/tgi-store-local.js');
   CORE().injectMethods(this);
   testSpec(spec, CORE);
   var LocalStorage = require('node-localstorage').LocalStorage;
-  localStorage = new LocalStorage('./scratch');
+  localStorage = new LocalStorage('./build');
   var localStore = new LocalStore({name: 'Host Test Store'});
   localStore.onConnect('http://localhost', function (store, err) {
     if (err) {
