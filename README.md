@@ -1,3 +1,3 @@
-tgi-store-local
-===============
-test2
+# tgi-store-local
+
+LocalStore [read the spec](spec/README.md).
