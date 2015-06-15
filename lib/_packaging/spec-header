@@ -1,8 +1,5 @@
 /**---------------------------------------------------------------------------------------------------------------------
- * tgi-core/lib/misc/test-header
+ tgi-store-local/lib/_packaging/spec-header
  **/
-(function () {
-"use strict";
-var root = this;
-var testSpec = function(spec,CORE) {
-spec.mute(true);
+  var LocalStore = TGI.STORE.LOCALSTORAGE().LocalStore;
+  spec.mute(true);

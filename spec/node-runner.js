@@ -3,17 +3,21 @@
  */
 var Spec = require('tgi-spec/dist/tgi.spec.js');
 var testSpec = require('../dist/tgi-store-local.spec.js');
-var spec = new Spec();
-var UTILITY = require('tgi-utility/dist/tgi.utility');
-var CORE = require('../dist/tgi-store-local.js');
+var TGI = require('../dist/tgi-store-local.js');
+var fs = require('fs');
+var _package = require('../package');
 
+if (_package.version != TGI.STORE.LOCALSTORAGE().version) {
+  console.error('Library version %s does not match package.json %s',TGI.STORE.LOCALSTORAGE().version,_package.version);
+  process.exit(1);
+}
 (function () {
-  UTILITY().injectMethods(this);
-  CORE().injectMethods(this);
-  testSpec(spec, CORE);
+  var spec = new Spec();
+  testSpec(spec, TGI);
   var LocalStorage = require('node-localstorage').LocalStorage;
   localStorage = new LocalStorage('./build');
-  var localStore = new LocalStore({name: 'Host Test Store'});
+  var ls = TGI.STORE.LOCALSTORAGE();
+  var localStore = new ls.LocalStore({name: 'Local Test Store'});
   localStore.onConnect('http://localhost', function (store, err) {
     if (err) {
       console.log('localStore unavailable (' + err + ')');

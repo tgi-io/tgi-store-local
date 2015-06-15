@@ -2,7 +2,7 @@
 #### LocalStore
 The LocalStore handles data storage via MongoDB.    
 
-Core tests run: {"testsCreated":430}    
+Core tests run: {"testsCreated":528}    
 
 #### CONSTRUCTOR
 #### Store Constructor tests are applied
@@ -70,7 +70,7 @@ cStore.storeType = 'ConvenienceStore';
 this.log(cStore.toString());
 return cStore.toString();
 ```
-<blockquote><strong>log: </strong>ConvenienceStore: 7-Eleven<br><strong>log: </strong>a LocalStore<br>returns <strong>ConvenienceStore: 7-Eleven</strong> as expected
+<blockquote><strong>log: </strong>a LocalStore<br><strong>log: </strong>ConvenienceStore: 7-Eleven<br>returns <strong>ConvenienceStore: 7-Eleven</strong> as expected
 </blockquote>
 #### onConnect()
 &nbsp;<b><i>must pass url string:</i></b>
@@ -124,11 +124,12 @@ var m = new Model();
 m.attributes[0].value = 1;
 new SurrogateStore().getModel(m);
 ```
-<blockquote><strong>Error: callBack required</strong> thrown as expected
+<blockquote><strong>Error: callback required</strong> thrown as expected
 </blockquote>
 &nbsp;<b><i>returns error when model not found:</i></b>
 ```javascript
 var m = new Model();
+m.modelType = "Supermodel"; // change type so one not used in tests
 m.attributes[0].value = 1;
 new SurrogateStore().getModel(m, function (mod, err) {
   if (err) {
@@ -161,11 +162,12 @@ var m = new Model();
 m.attributes[0].value = 1;
 new SurrogateStore().putModel(m);
 ```
-<blockquote><strong>Error: callBack required</strong> thrown as expected
+<blockquote><strong>Error: callback required</strong> thrown as expected
 </blockquote>
 &nbsp;<b><i>returns error when model not found:</i></b>
 ```javascript
 var m = new Model();
+m.modelType = "Supermodel";
 m.attributes[0].value = 1;
 new SurrogateStore().putModel(m, function (mod, err) {
   if (err) {
@@ -212,7 +214,7 @@ var m = new Model();
 m.attributes[0].value = 1;
 new SurrogateStore().deleteModel(m);
 ```
-<blockquote><strong>Error: callBack required</strong> thrown as expected
+<blockquote><strong>Error: callback required</strong> thrown as expected
 </blockquote>
 &nbsp;<b><i>returns error when model not found:</i></b>
 ```javascript
@@ -240,7 +242,7 @@ this.shouldThrowError(Error('argument must be a List'), function () {
 this.shouldThrowError(Error('filter argument must be Object'), function () {
   new SurrogateStore().getList(new List(new Model()));
 });
-this.shouldThrowError(Error('callBack required'), function () {
+this.shouldThrowError(Error('callback required'), function () {
   new SurrogateStore().getList(new List(new Model()), []);
 });
 // See integration tests for examples of usage
@@ -312,7 +314,7 @@ if (useListToCleanStart) {
 } else {
   storeStooges();
 }
-// Callback to store new stooges
+// callback to store new stooges
 function storeStooges() {
   self.log(self.oldStoogesFound);
   self.log(self.oldStoogesKilled);
@@ -412,7 +414,7 @@ function stoogeDeleted(model, error) {
     return;
   }
   // model parameter is what was deleted
-  self.shouldBeTrue(model.get('id') === null,'no id'); // ID is removed
+  self.shouldBeTrue(undefined === model.get('id')); // ID removed
   self.shouldBeTrue(model.get('name') == 'Curly'); // the rest remains
   // Is it really dead?
   var curly = new self.Stooge();
@@ -457,20 +459,16 @@ function listReady(list, error) {
   self.shouldBeTrue(list.get('name') == 'Larry','larry');
   list.moveNext();
   self.shouldBeTrue(list.get('name') == 'Moe','moe');
-//          self.shouldBeTrue(false,'WHAT'); // temp
-//          self.shouldBeTrue(true,'THE'); // temp
-//          self.shouldBeTrue(false,'FUCK'); // temp
   callback(true);
 }
 ```
-<blockquote><strong>log: </strong>Moe,Larry,Shemp<br><strong>log: </strong>0<br><strong>log: </strong>0<br><strong>log: </strong>a LocalStore LocalStore<br>returns <strong>true</strong> as expected
-<br>Assertion(s) failed
+<blockquote><strong>log: </strong>a LocalStore LocalStore<br><strong>log: </strong>0<br><strong>log: </strong>0<br><strong>log: </strong>Moe,Larry,Shemp<br>returns <strong>true</strong> as expected
 </blockquote>
 &nbsp;<b><i>Test variations on getList method.:</i></b>
 ```javascript
 var test = this;
 var storeBeingTested = new SurrogateStore();
-test.log(storeBeingTested);
+test.log('storeBeingTested: ' + storeBeingTested);
 // Create list of actors
 test.actorsInfo = [
   // Actor Born Male Oscards
@@ -522,28 +520,26 @@ try {
       storeActors();
     else {
       test.oldActorsFound = list._items.length;
+      var testakill = function (model, error) {
+        if (++test.oldActorsKilled >= test.oldActorsFound) {
+          storeActors();
+        }
+      };
       for (var i = 0; i < list._items.length; i++) {
         test.killhim.set('id', list._items[i][0]);
-        // jshint ignore:start
-        storeBeingTested.deleteModel(test.killhim, function (model, error) {
-          if (++test.oldActorsKilled >= test.oldActorsFound) {
-            storeActors();
-          }
-        })
-        // jshint ignore:end
+        storeBeingTested.deleteModel(test.killhim, testakill);
       }
     }
   });
 }
 catch (err) {
   callback(err);
-  return;
 }
-// Callback after model cleaned
+// callback after model cleaned
 // now, build List and add to store
 function storeActors() {
   test.actorsStored = 0;
-  for (var i=0; i<test.actorsInfo.length; i++) {
+  for (var i = 0; i < test.actorsInfo.length; i++) {
     test.actor.set('ID', null);
     test.actor.set('name', test.actorsInfo[i][0]);
     test.actor.set('born', test.actorsInfo[i][1]);
@@ -551,7 +547,7 @@ function storeActors() {
     storeBeingTested.putModel(test.actor, actorStored);
   }
 }
-// Callback after actor stored
+// callback after actor stored
 function actorStored(model, error) {
   if (typeof error != 'undefined') {
     callback(error);
@@ -569,13 +565,12 @@ function getAllActors() {
         callback(error);
         return;
       }
-      test.shouldBeTrue(list._items.length == 20,'20');
+      test.shouldBeTrue(list._items.length == 20, '20');
       getTomHanks();
     });
   }
   catch (err) {
     callback(err);
-    return;
   }
 }
 // only one Tom Hanks
@@ -586,13 +581,12 @@ function getTomHanks() {
         callback(error);
         return;
       }
-      test.shouldBeTrue(list._items.length == 1,('1 not ' + list._items.length));
+      test.shouldBeTrue(list._items.length == 1, ('1 not ' + list._items.length));
       getD();
     });
   }
   catch (err) {
     callback(err);
-    return;
   }
 }
 // 3 names begin with D
@@ -604,13 +598,12 @@ function getD() {
         callback(error);
         return;
       }
-      test.shouldBeTrue(list._items.length == 3,('3 not ' + list._items.length));
+      test.shouldBeTrue(list._items.length == 3, ('3 not ' + list._items.length));
       getRZ();
     });
   }
   catch (err) {
     callback(err);
-    return;
   }
 }
 // Renée Zellweger only female starting name with 'R'
@@ -622,42 +615,41 @@ function getRZ() {
         callback(error);
         return;
       }
-      test.shouldBeTrue(list._items.length == 1,('1 not ' + list._items.length));
-      //list._items.length && test.shouldBeTrue(list.get('name') == 'Renée Zellweger','rz');
+      test.shouldBeTrue(list._items.length == 1, ('1 not ' + list._items.length));
+      if (list._items.length)
+        test.shouldBeTrue(list.get('name') == 'Renée Zellweger', 'rz');
       getAlphabetical();
     });
   }
   catch (err) {
     callback(err);
-    return;
   }
 }
 // Retrieve list alphabetically by name
 // test order parameter
 function getAlphabetical() {
   try {
-    storeBeingTested.getList(test.list, {}, { name: 1 }, function (list, error) {
+    storeBeingTested.getList(test.list, {}, {name: 1}, function (list, error) {
       if (typeof error != 'undefined') {
         callback(error);
         return;
       }
       // Verify each move returns true when move succeeds
-      test.shouldBeTrue(list.moveFirst(),'moveFirst');
-      test.shouldBeTrue(!list.movePrevious(),'movePrevious');
-      test.shouldBeTrue(list.get('name') == 'Al Pacino','AP');
-      test.shouldBeTrue(list.moveLast(),'moveLast');
-      test.shouldBeTrue(!list.moveNext(),'moveNext');
-      test.shouldBeTrue(list.get('name') == 'Tom Hanks','TH');
+      test.shouldBeTrue(list.moveFirst(), 'moveFirst');
+      test.shouldBeTrue(!list.movePrevious(), 'movePrevious');
+      test.shouldBeTrue(list.get('name') == 'Al Pacino', 'AP');
+      test.shouldBeTrue(list.moveLast(), 'moveLast');
+      test.shouldBeTrue(!list.moveNext(), 'moveNext');
+      test.shouldBeTrue(list.get('name') == 'Tom Hanks', 'TH');
       callback(true);
     });
   }
   catch (err) {
     callback(err);
-    return;
   }
 }
 ```
-<blockquote><strong>log: </strong>a LocalStore<br>returns <strong>true</strong> as expected
+<blockquote><strong>log: </strong>storeBeingTested: a LocalStore<br>returns <strong>true</strong> as expected
 </blockquote>
-## [&#9664;](#-localstorage)&nbsp;[&#8984;](#table-of-contents) &nbsp;Summary
+## [&#9664;](#-localstorage)&nbsp;[&#8984;](#constructors) &nbsp;Summary
 This documentation generated with https://github.com/tgicloud/tgi-spec.<br>TODO put testin stats here.    

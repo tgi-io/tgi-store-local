@@ -1,13 +1,12 @@
 /**---------------------------------------------------------------------------------------------------------------------
  * tgi-spec/spec/html-runner.js
  **/
-var spec = new Spec();
 (function () {
-  var CORE = LOCALSTORAGE;
-  UTILITY().injectMethods(this);
-  CORE().injectMethods(this);
-  testSpec(spec, CORE);
-  var localStore = new LocalStore({name: 'Host Test Store'});
+  var spec = new Spec();
+  testSpec(spec, TGI);
+  var ls = TGI.STORE.LOCALSTORAGE();
+  var localStore = new ls.LocalStore({name: 'Local Test Store'});
+
   localStore.onConnect('http://localhost', function (store, err) {
     if (err) {
       console.log('localStore unavailable (' + err + ')');
